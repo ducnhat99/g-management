@@ -86,6 +86,12 @@ pnpm db:studio
 - Every purchase query is scoped by `userId` in `PurchaseStore`; another user's row is a 404.
 - Validate request bodies with `new ZodValidationPipe(schema)` using schemas from `@gold/shared`.
   400 responses are `{ message: 'Validation failed', issues: [{ path, message }] }`.
+- Web (`apps/web`): `src/proxy.ts` (Next 16's renamed middleware) refreshes the Supabase session on
+  every page request and redirects signed-out users to `/login?next=...` (sanitized by
+  `safeNextPath`). Server code checks the user with `getClaims()`, never `getSession()`. Signed-in
+  pages live under `src/app/(app)/`. Client Components call the API through `getApi()` from
+  `src/lib/api.ts` (Bearer token, refresh + retry once on 401) and TanStack Query.
+- Before writing Next.js code, read the bundled docs in `apps/web/node_modules/next/dist/docs/`.
 - E2E tests use `test/support/test-app.ts`: the real `AppModule` with a locally generated ES256 key
   (`tokenFor(userId)`) and an in-memory `PurchaseStore`.
 
