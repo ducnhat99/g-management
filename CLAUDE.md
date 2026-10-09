@@ -92,6 +92,10 @@ pnpm db:studio
   pages live under `src/app/(app)/`. Client Components call the API through `getApi()` from
   `src/lib/api.ts` (Bearer token, refresh + retry once on 401) and TanStack Query.
 - Before writing Next.js code, read the bundled docs in `apps/web/node_modules/next/dist/docs/`.
+- Dashboard UI lives in `apps/web/src/components/dashboard/`; data hooks in `src/lib/queries.ts`
+  (every mutation invalidates the summary). Component tests use `// @vitest-environment jsdom`,
+  Testing Library, `vi.mock('@/lib/api')`, and data built with the real `calculatePortfolio`;
+  compare VND text after replacing the non-breaking space (`formatVND(n).replace(/\s/g, ' ')`).
 - E2E tests use `test/support/test-app.ts`: the real `AppModule` with a locally generated ES256 key
   (`tokenFor(userId)`) and an in-memory `PurchaseStore`.
 
