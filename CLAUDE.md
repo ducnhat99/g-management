@@ -8,9 +8,14 @@ live price. Single user, built phase by phase (see the plan doc "Kế hoạch bu
 - Only track **"Vàng 9999 (nhẫn tròn)"** from Ngọc Thịnh. Price source: the table on the homepage
   <https://ngocthinh-jewelry.vn/> (unit VNĐ/CHỈ, numbers like `13.240.000`, "CẬP NHẬT LÚC HH:mm dd/MM/yyyy"
   in Vietnam time). The table appears twice in the HTML; it also has 98 and 96 nhẫn tròn rows.
-- Prices are fetched **only on demand**: when the user opens the app (TTL `PRICE_TTL_SECONDS`, default 600) or presses "Làm mới" (30 s cooldown counted from the last attempt). No scheduled jobs. After a
-  failed crawl, do not retry for `PRICE_FAILURE_BACKOFF_SECONDS` (default 60); serve the old snapshot
-  with `refreshError`.
+- Prices are fetched **only on demand**, never by a scheduled job. One rule for both app open
+  (`GET /prices/latest`) and "Làm mới" (`POST /prices/refresh`): crawl only if the last successful
+  crawl (`checked_at`) is older than `PRICE_TTL_SECONDS` (default 3600 = 1 hour). Otherwise reuse the
+  stored price. `PriceDto.nextRefreshAt` says when crawling is allowed again; the UI keeps "Làm mới"
+  disabled until then, and an early `POST /prices/refresh` gets 429 with `nextRefreshAt`.
+- After a failed crawl, serve the old snapshot with `refreshError` and allow a retry after
+  `PRICE_FAILURE_BACKOFF_SECONDS` (default 60), not after the full hour. All of this lives only in
+  `PricesService`.
 - Profit/loss uses the shop's **buy price (giá mua vào)**, i.e. what the shop pays you back.
 - Quantity is stored in **chỉ** (1 cây = 10 chỉ) as `Decimal(10,3)`. It crosses the API as a decimal
   string (`"0.5"`). Never `parseFloat` a quantity; parse the string into thousandths of a chỉ.

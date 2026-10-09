@@ -1,5 +1,5 @@
 import { load, type CheerioAPI } from 'cheerio';
-import { PriceFetchError, PriceParseError, type PriceQuote } from './price-source';
+import { PriceFetchError, PriceParseError, PriceSource, type PriceQuote } from './price-source';
 
 export const NGOC_THINH_URL = 'https://ngocthinh-jewelry.vn/';
 export const FETCH_TIMEOUT_MS = 8_000;
@@ -173,4 +173,10 @@ export async function fetchHtml(
 
 export async function fetchQuote(): Promise<PriceQuote> {
   return parseQuote(await fetchHtml());
+}
+
+export class NgocThinhPriceSource extends PriceSource {
+  fetchQuote(): Promise<PriceQuote> {
+    return fetchQuote();
+  }
 }

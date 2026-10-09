@@ -8,6 +8,11 @@ export interface PriceQuote {
   sourceUpdatedAt: Date;
 }
 
+/** A site we can read a quote from. Abstract so PricesService tests can mock the crawl. */
+export abstract class PriceSource {
+  abstract fetchQuote(): Promise<PriceQuote>;
+}
+
 /** Network failure, timeout, or a non-2xx HTTP response. */
 export class PriceFetchError extends Error {
   override readonly name = 'PriceFetchError';
