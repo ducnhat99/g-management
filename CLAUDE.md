@@ -115,4 +115,8 @@ pnpm db:studio
   `formatPercent` for display.
 - Don't run Nest code through `tsx` (esbuild emits no decorator metadata, so DI injects
   `undefined`). For ad-hoc scripts, `pnpm build` and require from `apps/api/dist`.
+- Deploy (see `DEPLOY.md`): API on Render from `apps/api/Dockerfile` via `render.yaml` (one
+  instance only: price state is in memory; migrations run on container start); web on Vercel with
+  root `apps/web` and `apps/web/vercel.json`. Test the image locally with
+  `docker build --platform linux/amd64 -f apps/api/Dockerfile .` from the repo root.
 - Commit per phase with message `phase-N: ...`.
