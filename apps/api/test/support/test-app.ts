@@ -10,8 +10,10 @@ import {
   type CryptoKey,
   type JWTPayload,
 } from 'jose';
+import { vi, type Mock } from 'vitest';
 import { AppModule } from '../../src/app.module';
 import { SupabaseTokenVerifier, TokenVerifier } from '../../src/auth/token-verifier';
+import { PricesService } from '../../src/prices/prices.service';
 import { PurchaseStore, type PurchaseWrite } from '../../src/purchases/purchase.store';
 
 export const ISSUER = 'https://test-project.supabase.co/auth/v1';
@@ -83,6 +85,12 @@ export interface TestApp {
   tokenFor(userId: string, claims?: JWTPayload & { exp?: number }): Promise<string>;
   /** A token signed by a key the API does not trust. */
   foreignToken(userId: string): Promise<string>;
+  /** Stubbed PricesService; set what getLatest resolves or rejects with per test. */
+  prices: {
+    getLatest: Mock<PricesService['getLatest']>;
+    refresh: Mock<PricesService['refresh']>;
+    getHistory: Mock<PricesService['getHistory']>;
+  };
 }
 
 async function sign(key: CryptoKey, userId: string, claims: JWTPayload = {}) {
@@ -100,19 +108,29 @@ async function sign(key: CryptoKey, userId: string, claims: JWTPayload = {}) {
     .sign(key);
 }
 
-/** The real AppModule, with a local signing key and an in-memory purchase store. */
+/**
+ * The real AppModule, with a local signing key, an in-memory purchase store and a stubbed
+ * PricesService (its own logic is covered by prices.service.test.ts).
+ */
 export async function createTestApp(): Promise<TestApp> {
   const trusted = await generateKeyPair('ES256');
   const untrusted = await generateKeyPair('ES256');
   const jwk = { ...(await exportJWK(trusted.publicKey)), kid: KID, alg: 'ES256' };
   const verifier = new SupabaseTokenVerifier(createLocalJWKSet({ keys: [jwk] }), ISSUER, ['ES256']);
   const store = new FakePurchaseStore();
+  const prices = {
+    getLatest: vi.fn<PricesService['getLatest']>(),
+    refresh: vi.fn<PricesService['refresh']>(),
+    getHistory: vi.fn<PricesService['getHistory']>(),
+  };
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(TokenVerifier)
     .useValue(verifier)
     .overrideProvider(PurchaseStore)
     .useValue(store)
+    .overrideProvider(PricesService)
+    .useValue(prices)
     .compile();
   const app = moduleRef.createNestApplication();
   await app.init();
@@ -120,6 +138,7 @@ export async function createTestApp(): Promise<TestApp> {
   return {
     app,
     store,
+    prices,
     tokenFor: (userId, claims) => sign(trusted.privateKey, userId, claims),
     foreignToken: (userId) => sign(untrusted.privateKey, userId),
   };

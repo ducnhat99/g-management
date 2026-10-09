@@ -99,4 +99,10 @@ pnpm db:studio
 - The crawler (`apps/api/src/prices/sources/ngocthinh.ts`) finds the table by its header text, not
   CSS classes (the markup is div rows, not `<table>`). Observed 2026-10-09: the site changed prices
   without changing "CẬP NHẬT LÚC", so never assume same timestamp means same price.
+- Profit/loss comes only from `calculatePortfolio` in `@gold/shared` (API and web form alike): each
+  lot's cost/value is rounded half-up to whole đồng, totals are sums of the rounded lots, and
+  percentages round half away from zero to 2 decimals. Use `formatVND`, `formatChi`,
+  `formatPercent` for display.
+- Don't run Nest code through `tsx` (esbuild emits no decorator metadata, so DI injects
+  `undefined`). For ad-hoc scripts, `pnpm build` and require from `apps/api/dist`.
 - Commit per phase with message `phase-N: ...`.
