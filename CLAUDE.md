@@ -6,7 +6,7 @@ live price. Single user, built phase by phase (see the plan doc "Kế hoạch bu
 ## Product decisions (do not change without asking)
 
 - Only track **"Vàng 9999 (nhẫn tròn)"** from Ngọc Thịnh. Price source: the table on the homepage
-  https://ngocthinh-jewelry.vn/ (unit VNĐ/CHỈ, numbers like `13.240.000`, "CẬP NHẬT LÚC HH:mm dd/MM/yyyy"
+  <https://ngocthinh-jewelry.vn/> (unit VNĐ/CHỈ, numbers like `13.240.000`, "CẬP NHẬT LÚC HH:mm dd/MM/yyyy"
   in Vietnam time). The table appears twice in the HTML; it also has 98 and 96 nhẫn tròn rows.
 - Prices are fetched **only on demand**: when the user opens the app (TTL `PRICE_TTL_SECONDS`, default 600) or presses "Làm mới" (30 s cooldown counted from the last attempt). No scheduled jobs. After a
   failed crawl, do not retry for `PRICE_FAILURE_BACKOFF_SECONDS` (default 60); serve the old snapshot
@@ -76,5 +76,9 @@ pnpm db:studio
 - Put shared types, zod schemas, money/quantity math and formatters in `packages/shared` so the web
   form and the API compute identical numbers.
 - Tests live next to the code (`*.test.ts`); API e2e tests in `apps/api/test/`.
-- Crawler tests use saved real HTML fixtures, never the network.
+- Crawler tests use saved real HTML fixtures, never the network. Fixtures are excluded from
+  Prettier; build failure variants by editing a copy of the fixture string in the test.
+- The crawler (`apps/api/src/prices/sources/ngocthinh.ts`) finds the table by its header text, not
+  CSS classes (the markup is div rows, not `<table>`). Observed 2026-10-09: the site changed prices
+  without changing "CẬP NHẬT LÚC", so never assume same timestamp means same price.
 - Commit per phase with message `phase-N: ...`.
