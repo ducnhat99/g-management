@@ -1,25 +1,21 @@
 import { getAppInfo } from '@gold/shared';
-import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AppModule } from '../src/app.module';
+import { createTestApp, type TestApp } from './support/test-app';
 
 describe('GET /health', () => {
-  let app: INestApplication;
+  let t: TestApp;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
-    await app.init();
+    t = await createTestApp();
   });
 
   afterAll(async () => {
-    await app.close();
+    await t.app.close();
   });
 
-  it('returns {"status":"ok"}', async () => {
-    await request(app.getHttpServer()).get('/health').expect(200).expect({ status: 'ok' });
+  it('returns {"status":"ok"} without a token', async () => {
+    await request(t.app.getHttpServer()).get('/health').expect(200).expect({ status: 'ok' });
   });
 
   it('can import from @gold/shared', () => {

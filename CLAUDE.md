@@ -76,6 +76,19 @@ pnpm db:studio
   `decimalToString`, `dateToIsoDate`) in DTO mappers.
 - `PrismaService` connects lazily, so tests that don't query the DB need no database.
 
+## Auth
+
+- `SupabaseAuthGuard` is global (`APP_GUARD`): every route needs a Supabase access token unless
+  marked `@Public()` (only `/health` today). Get the user with `@CurrentUser() userId: string`.
+- Tokens are verified with `jose` against `${SUPABASE_URL}/auth/v1/.well-known/jwks.json` (this
+  project signs with ES256), checking `iss`, `aud = "authenticated"`, `exp` and a uuid `sub`.
+  `SUPABASE_JWT_SECRET` (HS256) is only for legacy projects; leave it empty.
+- Every purchase query is scoped by `userId` in `PurchaseStore`; another user's row is a 404.
+- Validate request bodies with `new ZodValidationPipe(schema)` using schemas from `@gold/shared`.
+  400 responses are `{ message: 'Validation failed', issues: [{ path, message }] }`.
+- E2E tests use `test/support/test-app.ts`: the real `AppModule` with a locally generated ES256 key
+  (`tokenFor(userId)`) and an in-memory `PurchaseStore`.
+
 ## Conventions
 
 - Put shared types, zod schemas, money/quantity math and formatters in `packages/shared` so the web
