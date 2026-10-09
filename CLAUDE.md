@@ -53,7 +53,23 @@ pnpm lint
 pnpm typecheck
 pnpm format
 pnpm --filter api test   # one package
+
+# Database (run in apps/api, or via pnpm --filter api <script>)
+pnpm db:migrate  # prisma migrate dev
+pnpm db:seed     # idempotent upsert of GoldType NT_9999
+pnpm db:studio
 ```
+
+## Database
+
+- Schema: `apps/api/prisma/schema.prisma`; config: `apps/api/prisma.config.ts` (loads `.env` via
+  dotenv, because Prisma skips `.env` loading when a config file exists).
+- Tables and columns are snake_case via `@@map`/`@map` (`gold_types`, `price_snapshots`, `purchases`).
+- CHECK constraints and `ENABLE ROW LEVEL SECURITY` are hand-written in migration SQL. For schema
+  changes that need them, use `prisma migrate dev --create-only`, edit the SQL, then apply.
+- Responses never expose raw Prisma values: use `src/prisma/serialize.ts` (`bigintToNumber`,
+  `decimalToString`, `dateToIsoDate`) in DTO mappers.
+- `PrismaService` connects lazily, so tests that don't query the DB need no database.
 
 ## Conventions
 
