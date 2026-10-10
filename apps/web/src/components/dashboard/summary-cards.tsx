@@ -21,7 +21,7 @@ export function SummaryCards({ totals }: { totals: PortfolioTotals }) {
         label="Tổng vốn"
         hint={
           totals.avgCostPerChi !== null &&
-          `Hòa vốn khi mua vào ${formatVND(totals.avgCostPerChi)}/chỉ`
+          `Giá mua trung bình ${formatVND(totals.avgCostPerChi)}/chỉ`
         }
       >
         {formatVND(totals.cost)}

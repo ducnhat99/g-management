@@ -105,7 +105,8 @@ describe('Dashboard', () => {
 
     expect(card('Tổng vàng')).toHaveTextContent('8 chỉ');
     expect(card('Tổng vốn')).toHaveTextContent(vnd(99_000_000));
-    expect(card('Tổng vốn')).toHaveTextContent(`Hòa vốn khi mua vào ${vnd(12_375_000)}/chỉ`);
+    // 99.000.000 ₫ ÷ 8 chỉ.
+    expect(card('Tổng vốn')).toHaveTextContent(`Giá mua trung bình ${vnd(12_375_000)}/chỉ`);
     expect(card('Giá trị hiện tại')).toHaveTextContent(vnd(105_920_000));
     expect(card('Lời/lỗ')).toHaveTextContent(`+${vnd(6_920_000)}(+6,99%)`);
     expect(card('Lời/lỗ').querySelector('.text-emerald-700')).not.toBeNull();
