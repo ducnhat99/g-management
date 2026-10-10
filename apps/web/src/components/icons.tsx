@@ -87,6 +87,17 @@ export const CalendarIcon = (p: P) => (
     <path d="M4 10h16M9 3v4M15 3v4" />
   </Icon>
 );
+export const PlayIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />
+  </Icon>
+);
+export const CheckCircleIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m8 12.5 2.5 2.5L16 9.5" />
+  </Icon>
+);
 export const AlertIcon = (p: P) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />

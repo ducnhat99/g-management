@@ -1,6 +1,7 @@
 'use client';
 
 import { lazy, Suspense } from 'react';
+import { GoldRingLogo } from '@/components/gold-ring-logo';
 
 // Loaded only when the wait is actually slow, so fast visits never download the game.
 const CatchGoldGame = lazy(() =>
@@ -13,31 +14,46 @@ const CatchGoldGame = lazy(() =>
  */
 export function WaitingRoom({ ready, onContinue }: { ready: boolean; onContinue: () => void }) {
   return (
-    <section className="space-y-4">
+    <section className="mx-auto max-w-md space-y-4">
       {ready ? (
+        // The text <span> and the button must stay siblings (the dashboard test relies on it).
         <div
           role="status"
-          className="sticky top-2 z-10 flex items-center justify-between gap-3 rounded-xl bg-emerald-600 px-4 py-3 text-white shadow-md"
+          className="sticky top-16 z-10 flex animate-modal-in items-center justify-between gap-3 rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-600 py-2.5 pr-2.5 pl-4 text-white shadow-lg shadow-emerald-700/20"
         >
-          <span className="font-medium">✓ Dữ liệu đã sẵn sàng</span>
+          <span className="font-semibold">✓ Dữ liệu đã sẵn sàng</span>
           <button
             type="button"
             onClick={onContinue}
-            className="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+            className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50"
           >
             Xem danh mục
           </button>
         </div>
       ) : (
-        <p role="status" className="flex items-center gap-2 text-sm text-stone-600">
-          <span
-            aria-hidden="true"
-            className="size-3.5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent"
-          />
-          Đang lấy giá vàng mới nhất… Chơi một ván Hứng vàng trong lúc chờ nhé!
-        </p>
+        <div className="overflow-hidden rounded-2xl border border-amber-200/70 bg-white shadow-sm">
+          <div className="flex items-center gap-3 p-4">
+            <GoldRingLogo className="size-10 shrink-0 animate-pulse" />
+            <div className="min-w-0">
+              <p className="font-semibold text-stone-900">Đang chuẩn bị dữ liệu…</p>
+              <p role="status" className="text-sm text-stone-600">
+                Đang lấy giá vàng mới nhất… Chơi một ván Hứng vàng trong lúc chờ nhé!
+              </p>
+            </div>
+          </div>
+          {/* Indeterminate progress: the wait has no known length. */}
+          <div aria-hidden="true" className="h-1 overflow-hidden bg-amber-100">
+            <div className="h-full w-2/5 animate-progress rounded-full bg-linear-to-r from-amber-400 to-amber-600" />
+          </div>
+        </div>
       )}
-      <Suspense fallback={<p className="text-sm text-stone-500">Đang tải trò chơi…</p>}>
+      <Suspense
+        fallback={
+          <p className="rounded-2xl border border-dashed border-amber-200 p-8 text-center text-sm text-stone-500">
+            Đang tải trò chơi…
+          </p>
+        }
+      >
         <CatchGoldGame onExit={ready ? onContinue : undefined} />
       </Suspense>
     </section>
