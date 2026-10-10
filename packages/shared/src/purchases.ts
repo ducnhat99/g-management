@@ -85,6 +85,8 @@ export interface PurchaseDto {
   /** YYYY-MM-DD. */
   purchasedAt: string;
   note: string | null;
+  /** Email of the household member who entered it; null if they have left the household. */
+  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 }

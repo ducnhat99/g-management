@@ -1,5 +1,10 @@
 import type {
+  AssignableRole,
   CreatePurchaseInput,
+  HouseholdDto,
+  HouseholdInviteDto,
+  HouseholdMemberDto,
+  InviteMemberInput,
   PortfolioSummaryDto,
   PriceDto,
   PurchaseDto,
@@ -53,6 +58,69 @@ export function useDeletePurchase() {
   const invalidate = useInvalidateSummary();
   return useMutation({
     mutationFn: (id: string) => getApi().delete(`/purchases/${id}`),
+    onSuccess: invalidate,
+  });
+}
+
+export const householdKey = ['household'] as const;
+
+/** Members, the caller's role and (for the owner) pending invites. */
+export function useHousehold() {
+  return useQuery({
+    queryKey: householdKey,
+    queryFn: () => getApi().get<HouseholdDto>('/household'),
+  });
+}
+
+/** After any member change, reload the member list and the summary (role, member count). */
+function useInvalidateHousehold() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: householdKey }),
+      queryClient.invalidateQueries({ queryKey: summaryKey }),
+    ]);
+}
+
+export function useInviteMember() {
+  const invalidate = useInvalidateHousehold();
+  return useMutation({
+    mutationFn: (body: InviteMemberInput) =>
+      getApi().post<HouseholdInviteDto>('/household/invites', body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useResendInvite() {
+  const invalidate = useInvalidateHousehold();
+  return useMutation({
+    mutationFn: (inviteId: string) =>
+      getApi().post<HouseholdInviteDto>(`/household/invites/${inviteId}/resend`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRevokeInvite() {
+  const invalidate = useInvalidateHousehold();
+  return useMutation({
+    mutationFn: (inviteId: string) => getApi().delete(`/household/invites/${inviteId}`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useChangeMemberRole() {
+  const invalidate = useInvalidateHousehold();
+  return useMutation({
+    mutationFn: ({ memberId, role }: { memberId: string; role: AssignableRole }) =>
+      getApi().patch<HouseholdMemberDto>(`/household/members/${memberId}`, { role }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveMember() {
+  const invalidate = useInvalidateHousehold();
+  return useMutation({
+    mutationFn: (memberId: string) => getApi().delete(`/household/members/${memberId}`),
     onSuccess: invalidate,
   });
 }

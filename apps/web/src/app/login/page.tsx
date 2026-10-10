@@ -12,9 +12,9 @@ const HIGHLIGHTS = [
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
 }) {
-  const { next } = await searchParams;
+  const { next, error } = await searchParams;
   return (
     <main className="min-h-screen bg-linear-to-br from-amber-50 via-white to-stone-100 lg:grid lg:grid-cols-2">
       {/* Brand panel: desktop widths (lg) and up; phones get the compact logo above the form. */}
@@ -73,11 +73,20 @@ export default async function LoginPage({
             <p className="mt-1 text-sm text-stone-600">
               Chào mừng trở lại! Đăng nhập để xem danh mục vàng của bạn.
             </p>
+            {error === 'link' && (
+              <p
+                role="alert"
+                className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900"
+              >
+                Liên kết trong email đã hết hạn hoặc đã được dùng. Nhờ người mời bấm “Gửi lại” để
+                nhận liên kết mới.
+              </p>
+            )}
             <LoginForm next={safeNextPath(typeof next === 'string' ? next : null)} />
           </div>
 
           <p className="mt-6 text-center text-xs text-stone-500">
-            Tài khoản do quản trị viên tạo. Liên hệ nếu bạn cần truy cập.
+            Được mời vào gia đình? Mở liên kết trong email mời để đặt mật khẩu.
           </p>
         </div>
       </section>

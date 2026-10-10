@@ -4,6 +4,8 @@ import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 export interface AuthUser {
   /** Supabase Auth user id (the JWT `sub`). */
   id: string;
+  /** Lowercased email from the token, or null if the token has none. Used to match invites. */
+  email: string | null;
 }
 
 /** Turns a bearer token into a user, or throws. Abstract so tests can verify with local keys. */
@@ -50,6 +52,7 @@ export class SupabaseTokenVerifier extends TokenVerifier {
     if (typeof payload.sub !== 'string' || !UUID.test(payload.sub)) {
       throw new Error('Token subject is not a user id');
     }
-    return { id: payload.sub };
+    const email = typeof payload.email === 'string' && payload.email ? payload.email : null;
+    return { id: payload.sub, email: email?.toLowerCase() ?? null };
   }
 }

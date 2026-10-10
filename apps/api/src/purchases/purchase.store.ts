@@ -12,22 +12,23 @@ export interface PurchaseWrite {
 }
 
 /**
- * Purchases, always scoped to one user: a purchase owned by someone else behaves exactly like one
- * that does not exist. Abstract so e2e tests can run without a database.
+ * Purchases, always scoped to one household: a purchase of another household behaves exactly like
+ * one that does not exist. Abstract so e2e tests can run without a database.
  */
 export abstract class PurchaseStore {
   /** Newest purchase date first. */
-  abstract list(userId: string): Promise<Purchase[]>;
-  abstract find(userId: string, id: string): Promise<Purchase | null>;
-  abstract create(userId: string, data: PurchaseWrite): Promise<Purchase>;
-  /** null when no such purchase belongs to the user. */
+  abstract list(householdId: string): Promise<Purchase[]>;
+  abstract find(householdId: string, id: string): Promise<Purchase | null>;
+  /** `userId` records who entered it. */
+  abstract create(householdId: string, userId: string, data: PurchaseWrite): Promise<Purchase>;
+  /** null when no such purchase belongs to the household. */
   abstract update(
-    userId: string,
+    householdId: string,
     id: string,
     data: Partial<PurchaseWrite>,
   ): Promise<Purchase | null>;
-  /** false when no such purchase belongs to the user. */
-  abstract delete(userId: string, id: string): Promise<boolean>;
+  /** false when no such purchase belongs to the household. */
+  abstract delete(householdId: string, id: string): Promise<boolean>;
 }
 
 /** A DATE column value: midnight UTC of that calendar day. */
@@ -50,20 +51,21 @@ export class PrismaPurchaseStore extends PurchaseStore {
     super();
   }
 
-  list(userId: string): Promise<Purchase[]> {
+  list(householdId: string): Promise<Purchase[]> {
     return this.prisma.purchase.findMany({
-      where: { userId },
+      where: { householdId },
       orderBy: [{ purchasedAt: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
-  find(userId: string, id: string): Promise<Purchase | null> {
-    return this.prisma.purchase.findFirst({ where: { id, userId } });
+  find(householdId: string, id: string): Promise<Purchase | null> {
+    return this.prisma.purchase.findFirst({ where: { id, householdId } });
   }
 
-  async create(userId: string, data: PurchaseWrite): Promise<Purchase> {
+  async create(householdId: string, userId: string, data: PurchaseWrite): Promise<Purchase> {
     return this.prisma.purchase.create({
       data: {
+        householdId,
         userId,
         goldTypeId: await this.getGoldTypeId(),
         quantityChi: data.quantityChi,
@@ -74,16 +76,20 @@ export class PrismaPurchaseStore extends PurchaseStore {
     });
   }
 
-  async update(userId: string, id: string, data: Partial<PurchaseWrite>): Promise<Purchase | null> {
+  async update(
+    householdId: string,
+    id: string,
+    data: Partial<PurchaseWrite>,
+  ): Promise<Purchase | null> {
     const { count } = await this.prisma.purchase.updateMany({
-      where: { id, userId },
+      where: { id, householdId },
       data: toDbData(data),
     });
-    return count === 0 ? null : this.find(userId, id);
+    return count === 0 ? null : this.find(householdId, id);
   }
 
-  async delete(userId: string, id: string): Promise<boolean> {
-    const { count } = await this.prisma.purchase.deleteMany({ where: { id, userId } });
+  async delete(householdId: string, id: string): Promise<boolean> {
+    const { count } = await this.prisma.purchase.deleteMany({ where: { id, householdId } });
     return count > 0;
   }
 

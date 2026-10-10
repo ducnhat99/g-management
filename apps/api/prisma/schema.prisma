@@ -55,7 +55,9 @@ model PriceSnapshot {
 
 model Purchase {
   id          String   @id @default(uuid()) @db.Uuid
-  /// Supabase Auth user id (auth.users.id). No FK: auth lives in another schema.
+  /// The family portfolio this purchase belongs to. All its members see it.
+  householdId String   @map("household_id") @db.Uuid
+  /// Who entered it: Supabase Auth user id (auth.users.id). No FK: auth lives in another schema.
   userId      String   @map("user_id") @db.Uuid
   goldTypeId  String   @map("gold_type_id") @db.Uuid
   quantityChi Decimal  @map("quantity_chi") @db.Decimal(10, 3)
@@ -66,8 +68,81 @@ model Purchase {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  goldType GoldType @relation(fields: [goldTypeId], references: [id], onDelete: Restrict)
+  goldType  GoldType  @relation(fields: [goldTypeId], references: [id], onDelete: Restrict)
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
 
-  @@index([userId, purchasedAt(sort: Desc)])
+  @@index([householdId, purchasedAt(sort: Desc)])
   @@map("purchases")
+}
+
+/// owner: everything incl. managing members. editor: add/edit/delete purchases. viewer: read only.
+enum MemberRole {
+  owner
+  editor
+  viewer
+
+  @@map("member_role")
+}
+
+enum InviteStatus {
+  pending
+  accepted
+  revoked
+
+  @@map("invite_status")
+}
+
+/// A family portfolio shared by its members (e.g. husband and wife).
+model Household {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @default("Gia đình") @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  members   HouseholdMember[]
+  invites   HouseholdInvite[]
+  purchases Purchase[]
+
+  @@map("households")
+}
+
+model HouseholdMember {
+  id          String     @id @default(uuid()) @db.Uuid
+  householdId String     @map("household_id") @db.Uuid
+  /// Supabase Auth user id. A user belongs to exactly one household.
+  userId      String     @unique @map("user_id") @db.Uuid
+  /// Copy of the auth email, refreshed from the token on each request (for member lists).
+  email       String     @db.VarChar(320)
+  role        MemberRole
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@index([householdId])
+  @@map("household_members")
+}
+
+model HouseholdInvite {
+  id          String       @id @default(uuid()) @db.Uuid
+  householdId String       @map("household_id") @db.Uuid
+  /// Lowercased.
+  email       String       @db.VarChar(320)
+  /// editor or viewer (never owner; enforced by a CHECK in the migration).
+  role        MemberRole
+  status      InviteStatus @default(pending)
+  /// Auth user Supabase created for the invite, so revoking can delete it.
+  authUserId  String?      @map("auth_user_id") @db.Uuid
+  invitedBy   String       @map("invited_by") @db.Uuid
+  expiresAt   DateTime     @map("expires_at") @db.Timestamptz(3)
+  acceptedAt  DateTime?    @map("accepted_at") @db.Timestamptz(3)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  // At most one pending invite per email (unique partial index in the migration SQL).
+  @@index([email, status])
+  @@index([householdId])
+  @@map("household_invites")
 }

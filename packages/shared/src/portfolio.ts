@@ -1,4 +1,5 @@
 import { costOf } from './money';
+import type { MemberRole } from './household';
 import type { PriceDto } from './prices';
 import type { PurchaseDto } from './purchases';
 import { milliChiToString, toMilliChi } from './quantity';
@@ -56,6 +57,8 @@ export interface PortfolioSummaryDto {
   /** Why price is null. */
   priceError: string | null;
   portfolio: PortfolioResult<PurchaseDto>;
+  /** The signed-in user's place in the household, so the UI can hide what they may not do. */
+  access: { role: MemberRole; memberCount: number };
 }
 
 /** a / b rounded half away from zero (so -0.825 -> -0.83, like +0.825 -> +0.83). */

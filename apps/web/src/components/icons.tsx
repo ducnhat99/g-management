@@ -87,6 +87,29 @@ export const CalendarIcon = (p: P) => (
     <path d="M4 10h16M9 3v4M15 3v4" />
   </Icon>
 );
+export const UsersIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />
+  </Icon>
+);
+export const MailIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m3 7 9 6 9-6" />
+  </Icon>
+);
+export const SendIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M21 3 10 14M21 3l-7 18-4-7-7-4 18-7Z" />
+  </Icon>
+);
+export const EyeIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </Icon>
+);
 export const PlayIcon = (p: P) => (
   <Icon {...p}>
     <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />

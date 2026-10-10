@@ -47,6 +47,7 @@ const purchase = (id: string, quantityChi: string, unitPrice: number, purchasedA
     totalCost: 0,
     purchasedAt,
     note: null,
+    createdBy: null as string | null,
     createdAt: '2026-10-01T00:00:00Z',
     updatedAt: '2026-10-01T00:00:00Z',
   }) satisfies PurchaseDto;
@@ -64,7 +65,11 @@ const price = (overrides: Partial<PriceDto> = {}): PriceDto => ({
 });
 
 /** The Phase 5 test case, computed by the real shared calculation. */
-function summary(p: PriceDto | null = price(), priceError: string | null = null) {
+function summary(
+  p: PriceDto | null = price(),
+  priceError: string | null = null,
+  access: PortfolioSummaryDto['access'] = { role: 'owner', memberCount: 1 },
+) {
   const lots = [
     purchase('lot-2', '3', 13_000_000, '2026-06-01'),
     purchase('lot-1', '5', 12_000_000, '2026-01-15'),
@@ -73,6 +78,7 @@ function summary(p: PriceDto | null = price(), priceError: string | null = null)
     price: p,
     priceError,
     portfolio: calculatePortfolio(lots, p?.buyPrice ?? null, todayInVietnam()),
+    access,
   } satisfies PortfolioSummaryDto;
 }
 
@@ -260,8 +266,36 @@ describe('Dashboard', () => {
       price: price(),
       priceError: null,
       portfolio: calculatePortfolio([], 13_240_000, todayInVietnam()),
+      access: { role: 'owner', memberCount: 1 },
     });
     expect(await screen.findByText(/Chưa có giao dịch nào/)).toBeInTheDocument();
+  });
+
+  it('a viewer sees the portfolio without add, edit or delete', async () => {
+    renderDashboard(summary(price(), null, { role: 'viewer', memberCount: 2 }));
+    expect(await screen.findByText('Chỉ xem')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Thêm giao dịch' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Sửa / })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Xóa / })).not.toBeInTheDocument();
+    expect(card('Tổng vốn')).toHaveTextContent(vnd(99_000_000));
+  });
+
+  it('shows who entered each purchase when the portfolio is shared', async () => {
+    const data = summary(price(), null, { role: 'editor', memberCount: 2 });
+    data.portfolio.lots[0]!.createdBy = 'vo@example.com';
+    renderDashboard(data);
+    const table = await screen.findByRole('table');
+    const rows = within(table).getAllByRole('row').slice(1);
+    expect(rows[0]).toHaveTextContent('Thêm bởi vo@example.com');
+    expect(rows[1]).toHaveTextContent('Thêm bởi thành viên cũ');
+    // Editors keep the edit controls.
+    expect(screen.getByRole('button', { name: 'Thêm giao dịch' })).toBeInTheDocument();
+  });
+
+  it('hides "Thêm bởi" for a one-person portfolio', async () => {
+    renderDashboard();
+    await screen.findByRole('table');
+    expect(screen.queryByText(/Thêm bởi/)).not.toBeInTheDocument();
   });
 
   describe('waiting room (slow API)', () => {

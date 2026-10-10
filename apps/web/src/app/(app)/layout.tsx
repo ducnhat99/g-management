@@ -5,6 +5,7 @@ import { AppLogo } from '@/components/app-logo';
 import { siteTitle } from '@/lib/site';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { LogoutButton } from './logout-button';
+import { MembersLink } from './members-link';
 
 /** Layout for every signed-in page. proxy.ts already redirects; this re-checks on the server. */
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -23,7 +24,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <AppLogo className="size-9" priority />
             {siteTitle}
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <MembersLink />
             {email && (
               <span className="hidden items-center gap-2 rounded-full bg-stone-100 py-1 pr-3 pl-1 text-sm text-stone-700 sm:flex">
                 <span

@@ -3,13 +3,15 @@ import { DEFAULT_AFTER_LOGIN } from './lib/safe-next-path';
 import { redirectKeepingCookies, updateSession } from './lib/supabase/proxy';
 
 const LOGIN_PATH = '/login';
+/** Reachable without a session: the login page, and the email-link pages that create one. */
+const PUBLIC_PATHS = new Set([LOGIN_PATH, '/auth/confirm', '/auth/accept']);
 
-/** Refreshes the session on every page request; every page except /login requires sign-in. */
+/** Refreshes the session on every page request; every other page requires sign-in. */
 export async function proxy(request: NextRequest) {
   const { response, claims } = await updateSession(request);
   const { pathname, search } = request.nextUrl;
 
-  if (!claims && pathname !== LOGIN_PATH) {
+  if (!claims && !PUBLIC_PATHS.has(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = LOGIN_PATH;
     url.search = new URLSearchParams({ next: pathname + search }).toString();

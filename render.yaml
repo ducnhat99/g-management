@@ -28,6 +28,11 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      # Family invites: Supabase secret key (sb_secret_...) and the web app address.
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: WEB_APP_URL
+        sync: false
       - key: PRICE_TTL_SECONDS
         value: '3600'
       - key: PRICE_FAILURE_BACKOFF_SECONDS

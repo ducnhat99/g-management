@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 **G-management** (gold tracker): records purchases of plain 9999 gold rings and shows profit/loss against Ngọc Thịnh's
-live price. Single user, built phase by phase (see the plan doc "Kế hoạch build app quản lý vàng (v2)").
+live price. Shared by a family (one household, several members), built phase by phase (see the plan doc "Kế hoạch build app quản lý vàng (v2)").
 
 ## Product decisions (do not change without asking)
 
@@ -23,7 +23,10 @@ live price. Single user, built phase by phase (see the plan doc "Kế hoạch bu
 - All "today" / holding-days logic uses `Asia/Ho_Chi_Minh`. Purchase dates are `YYYY-MM-DD` strings.
 - The web app uses Supabase **only for auth**. All data goes through the NestJS API. The Supabase Data
   API is disabled and RLS is enabled on every table with no policies.
-- Every purchase carries `user_id` even though there is one user.
+- Purchases belong to a **household** (family portfolio) that all its members see. Roles: `owner`
+  (exactly one; manages members), `editor` (add/edit/delete purchases), `viewer` (read only). The
+  owner invites by email and can change a member between editor and viewer or remove them.
+  `purchases.user_id` records who entered each purchase ("Thêm bởi").
 
 ## Stack and versions
 
@@ -79,11 +82,24 @@ pnpm db:studio
 ## Auth
 
 - `SupabaseAuthGuard` is global (`APP_GUARD`): every route needs a Supabase access token unless
-  marked `@Public()` (only `/health` today). Get the user with `@CurrentUser() userId: string`.
+  marked `@Public()` (only `/health` today). The token's `sub` and `email` become `AuthUser`.
 - Tokens are verified with `jose` against `${SUPABASE_URL}/auth/v1/.well-known/jwks.json` (this
   project signs with ES256), checking `iss`, `aud = "authenticated"`, `exp` and a uuid `sub`.
   `SUPABASE_JWT_SECRET` (HS256) is only for legacy projects; leave it empty.
-- Every purchase query is scoped by `userId` in `PurchaseStore`; another user's row is a 404.
+- Household routes use `@UseGuards(HouseholdGuard)` (+ `@RequireRole('editor' | 'owner')`) and
+  `@CurrentMember()`. The guard resolves the caller's membership on every request: an existing
+  member, else a pending invite for their email is accepted, else a new household with them as
+  owner. Every purchase query is scoped by `householdId`; another household's row is a 404.
+- "One pending invite per email" and "one owner per household" are enforced in `HouseholdService`,
+  not by partial unique indexes (Prisma would drop indexes it cannot model).
+- Invites: `AuthAdmin` (`GoTrueAdminApi` from `@supabase/auth-js` with `SUPABASE_SECRET_KEY`, API only;
+  not `@supabase/supabase-js`, whose Realtime client needs a native WebSocket) sends Supabase's
+  invite email; cancelling an invite or removing a member deletes that auth user. Email links land on
+  `<WEB_APP_URL>/auth/confirm` (must be in Supabase's Redirect URLs). Two link styles work: the
+  custom "Invite user" template (`?token_hash={{ .TokenHash }}&type=invite`, verified on the server)
+  and Supabase's default one (session in the `#fragment`; the route hands over to the client page
+  `/auth/accept`, which reads it once). Both continue to `/set-password`. "Gửi lại" on an invite whose
+  login is already confirmed but never joined deletes that login and invites again.
 - Validate request bodies with `new ZodValidationPipe(schema)` using schemas from `@gold/shared`.
   400 responses are `{ message: 'Validation failed', issues: [{ path, message }] }`.
 - Web (`apps/web`): `src/proxy.ts` (Next 16's renamed middleware) refreshes the Supabase session on
@@ -101,7 +117,9 @@ pnpm db:studio
   mini-game (`src/components/catch-gold/`: pure `engine.ts` + canvas `draw.ts`). The game makes no
   API calls; the player leaves via the "Dữ liệu đã sẵn sàng" bar, never automatically.
 - E2E tests use `test/support/test-app.ts`: the real `AppModule` with a locally generated ES256 key
-  (`tokenFor(userId)`) and an in-memory `PurchaseStore`.
+  (`tokenFor(userId)`, email claim `emailOf(userId)`), in-memory `PurchaseStore` and
+  `HouseholdStore`, and a `FakeAuthAdmin` that records invites instead of emailing. Call `t.reset()`
+  between tests.
 
 ## Conventions
 

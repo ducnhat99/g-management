@@ -2,7 +2,8 @@ import { costOf, toMilliChi, type PurchaseDto } from '@gold/shared';
 import type { Purchase } from '@prisma/client';
 import { bigintToNumber, dateToIsoDate, decimalToString } from '../prisma/serialize';
 
-export function toPurchaseDto(purchase: Purchase): PurchaseDto {
+/** `memberEmails` maps userId -> email of the household's members (for `createdBy`). */
+export function toPurchaseDto(purchase: Purchase, memberEmails: Map<string, string>): PurchaseDto {
   const quantityChi = decimalToString(purchase.quantityChi);
   const unitPrice = bigintToNumber(purchase.unitPrice);
   return {
@@ -12,6 +13,7 @@ export function toPurchaseDto(purchase: Purchase): PurchaseDto {
     totalCost: costOf(toMilliChi(quantityChi), unitPrice),
     purchasedAt: dateToIsoDate(purchase.purchasedAt),
     note: purchase.note,
+    createdBy: memberEmails.get(purchase.userId) || null,
     createdAt: purchase.createdAt.toISOString(),
     updatedAt: purchase.updatedAt.toISOString(),
   };

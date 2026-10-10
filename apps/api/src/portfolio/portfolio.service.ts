@@ -1,6 +1,7 @@
 import { calculatePortfolio, todayInVietnam, type PortfolioSummaryDto } from '@gold/shared';
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { Clock } from '../common/clock';
+import { HouseholdService, type MemberContext } from '../households/household.service';
 import { PricesService } from '../prices/prices.service';
 import { PurchasesService } from '../purchases/purchases.service';
 
@@ -9,15 +10,17 @@ export class PortfolioService {
   constructor(
     private readonly prices: PricesService,
     private readonly purchases: PurchasesService,
+    private readonly households: HouseholdService,
     private readonly clock: Clock,
   ) {}
 
   /**
-   * Price + profit/loss in one call, so opening the dashboard also checks the price (same 1-hour
-   * rule as GET /prices/latest). With no price at all, still returns the purchases and their cost.
+   * Price + profit/loss of the caller's household in one call, so opening the dashboard also checks
+   * the price (same 1-hour rule as GET /prices/latest). With no price at all, still returns the
+   * purchases and their cost.
    */
-  async getSummary(userId: string): Promise<PortfolioSummaryDto> {
-    const [priceResult, purchases] = await Promise.all([
+  async getSummary(member: MemberContext): Promise<PortfolioSummaryDto> {
+    const [priceResult, purchases, memberCount] = await Promise.all([
       this.prices.getLatest().then(
         (price) => ({ price, priceError: null }),
         (error: unknown) => {
@@ -25,7 +28,8 @@ export class PortfolioService {
           return { price: null, priceError: error.message };
         },
       ),
-      this.purchases.list(userId),
+      this.purchases.list(member),
+      this.households.memberCount(member.householdId),
     ]);
     const { price, priceError } = priceResult;
     return {
@@ -36,6 +40,7 @@ export class PortfolioService {
         price?.buyPrice ?? null,
         todayInVietnam(this.clock.now()),
       ),
+      access: { role: member.role, memberCount },
     };
   }
 }

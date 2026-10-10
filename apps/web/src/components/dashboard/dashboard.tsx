@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PlusIcon } from '@/components/icons';
+import { canEditPurchases, type PortfolioSummaryDto } from '@gold/shared';
+import { EyeIcon, PlusIcon } from '@/components/icons';
 import { useSummary } from '@/lib/queries';
 import { useDelayedFlag } from '@/lib/use-delayed-flag';
 import { DeletePurchaseDialog } from './delete-purchase-dialog';
@@ -12,6 +13,8 @@ import { SummaryCards } from './summary-cards';
 import { WaitingRoom } from './waiting-room';
 
 type Dialog = { kind: 'form'; lot: Lot | null; key: number } | { kind: 'delete'; lot: Lot } | null;
+
+const OWN_PORTFOLIO: PortfolioSummaryDto['access'] = { role: 'owner', memberCount: 1 };
 
 /** Loading longer than this (a sleeping API) opens the waiting-room game. */
 export const SLOW_LOAD_MS = 1500;
@@ -47,6 +50,11 @@ export function Dashboard() {
   }
 
   const { price, priceError, portfolio } = summary.data;
+  // `?? OWN_PORTFOLIO`: an API deployed before households existed sends no `access` (the web and
+  // API hosts redeploy a few minutes apart).
+  const access = summary.data.access ?? OWN_PORTFOLIO;
+  const canEdit = canEditPurchases(access.role);
+  const shared = access.memberCount > 1;
   return (
     <div className="space-y-6">
       <PriceCard price={price} priceError={priceError} />
@@ -59,20 +67,34 @@ export function Dashboard() {
             <p className="text-sm text-stone-500">
               {portfolio.lots.length > 0
                 ? `${portfolio.lots.length} lần mua, mới nhất trước`
-                : 'Các lần mua vàng của bạn'}
+                : shared
+                  ? 'Các lần mua vàng của gia đình'
+                  : 'Các lần mua vàng của bạn'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => openForm(null)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-linear-to-r from-amber-500 to-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-600/20 transition hover:from-amber-600 hover:to-amber-700"
-          >
-            <PlusIcon className="size-4" />
-            Thêm giao dịch
-          </button>
+          {canEdit ? (
+            <button
+              type="button"
+              onClick={() => openForm(null)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-linear-to-r from-amber-500 to-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-600/20 transition hover:from-amber-600 hover:to-amber-700"
+            >
+              <PlusIcon className="size-4" />
+              Thêm giao dịch
+            </button>
+          ) : (
+            <span
+              title="Chủ sở hữu có thể đổi quyền của bạn trong mục Thành viên"
+              className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-sm font-medium text-stone-600"
+            >
+              <EyeIcon className="size-4" />
+              Chỉ xem
+            </span>
+          )}
         </div>
         <PurchasesTable
           lots={portfolio.lots}
+          canEdit={canEdit}
+          showCreatedBy={shared}
           onEdit={(lot) => openForm(lot)}
           onDelete={(lot) => setDialog({ kind: 'delete', lot })}
         />

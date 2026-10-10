@@ -95,6 +95,7 @@ describe('purchaseFormFrom', () => {
       totalCost: 162_500_000,
       purchasedAt: '2026-06-01',
       note: null,
+      createdBy: null,
       createdAt: '',
       updatedAt: '',
     };

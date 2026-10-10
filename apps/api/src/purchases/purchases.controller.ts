@@ -15,45 +15,58 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { CurrentMember, HouseholdGuard, RequireRole } from '../households/household.guard';
+import type { MemberContext } from '../households/household.service';
 import { PurchasesService } from './purchases.service';
 
+/** Every household member can read; adding, editing and deleting need the editor role. */
 @Controller('purchases')
+@UseGuards(HouseholdGuard)
 export class PurchasesController {
   constructor(private readonly purchases: PurchasesService) {}
 
   @Get()
-  list(@CurrentUser() userId: string): Promise<PurchaseDto[]> {
-    return this.purchases.list(userId);
+  list(@CurrentMember() member: MemberContext): Promise<PurchaseDto[]> {
+    return this.purchases.list(member);
   }
 
   @Post()
+  @RequireRole('editor')
   create(
-    @CurrentUser() userId: string,
+    @CurrentMember() member: MemberContext,
     @Body(new ZodValidationPipe(createPurchaseSchema)) body: CreatePurchaseInput,
   ): Promise<PurchaseDto> {
-    return this.purchases.create(userId, body);
+    return this.purchases.create(member, body);
   }
 
   @Get(':id')
-  get(@CurrentUser() userId: string, @Param('id', ParseUUIDPipe) id: string): Promise<PurchaseDto> {
-    return this.purchases.get(userId, id);
+  get(
+    @CurrentMember() member: MemberContext,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<PurchaseDto> {
+    return this.purchases.get(member, id);
   }
 
   @Patch(':id')
+  @RequireRole('editor')
   update(
-    @CurrentUser() userId: string,
+    @CurrentMember() member: MemberContext,
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(updatePurchaseSchema)) body: UpdatePurchaseInput,
   ): Promise<PurchaseDto> {
-    return this.purchases.update(userId, id, body);
+    return this.purchases.update(member, id, body);
   }
 
   @Delete(':id')
+  @RequireRole('editor')
   @HttpCode(204)
-  delete(@CurrentUser() userId: string, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.purchases.delete(userId, id);
+  delete(
+    @CurrentMember() member: MemberContext,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.purchases.delete(member, id);
   }
 }

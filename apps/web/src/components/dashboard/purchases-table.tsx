@@ -61,12 +61,29 @@ function Actions({
   );
 }
 
+/** "Thêm bởi …" under a purchase, when several people share the portfolio. */
+function CreatedBy({ lot }: { lot: Lot }) {
+  return (
+    <span className="block text-xs text-stone-400">
+      Thêm bởi {lot.createdBy ?? 'thành viên cũ'}
+    </span>
+  );
+}
+
+/**
+ * `canEdit` false (viewer role) hides Sửa/Xóa. `showCreatedBy` (more than one member) shows who
+ * entered each purchase.
+ */
 export function PurchasesTable({
   lots,
+  canEdit,
+  showCreatedBy,
   onEdit,
   onDelete,
 }: {
   lots: Lot[];
+  canEdit: boolean;
+  showCreatedBy: boolean;
   onEdit: (lot: Lot) => void;
   onDelete: (lot: Lot) => void;
 }) {
@@ -75,7 +92,9 @@ export function PurchasesTable({
       <div className="flex flex-col items-center rounded-2xl border border-dashed border-amber-300 bg-white/70 px-6 py-10 text-center">
         <AppLogo className="size-14 opacity-90" />
         <p className="mt-3 max-w-xs text-stone-600">
-          Chưa có giao dịch nào. Bấm “Thêm giao dịch” để nhập lần mua đầu tiên.
+          {canEdit
+            ? 'Chưa có giao dịch nào. Bấm “Thêm giao dịch” để nhập lần mua đầu tiên.'
+            : 'Chưa có giao dịch nào.'}
         </p>
       </div>
     );
@@ -113,9 +132,16 @@ export function PurchasesTable({
               </div>
             </dl>
             {lot.note && <p className="mt-2 text-sm text-stone-600">{lot.note}</p>}
-            <div className="mt-2 border-t border-stone-100 pt-2">
-              <Actions lot={lot} onEdit={onEdit} onDelete={onDelete} />
-            </div>
+            {showCreatedBy && (
+              <div className="mt-2">
+                <CreatedBy lot={lot} />
+              </div>
+            )}
+            {canEdit && (
+              <div className="mt-2 border-t border-stone-100 pt-2">
+                <Actions lot={lot} onEdit={onEdit} onDelete={onDelete} />
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -131,9 +157,11 @@ export function PurchasesTable({
               <th className="px-4 py-3 text-right">Vốn</th>
               <th className="px-4 py-3 text-right">Giá trị</th>
               <th className="px-4 py-3 text-right">Lời/lỗ</th>
-              <th className="px-4 py-3">
-                <span className="sr-only">Thao tác</span>
-              </th>
+              {canEdit && (
+                <th className="px-4 py-3">
+                  <span className="sr-only">Thao tác</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100 text-stone-700 tabular-nums">
@@ -153,6 +181,7 @@ export function PurchasesTable({
                       {lot.note}
                     </span>
                   )}
+                  {showCreatedBy && <CreatedBy lot={lot} />}
                 </td>
                 <td className="px-4 py-3 text-right">{formatVND(lot.unitPrice)}</td>
                 <td className="px-4 py-3 text-right">{formatVND(lot.cost)}</td>
@@ -162,9 +191,11 @@ export function PurchasesTable({
                 <td className="px-4 py-3 text-right font-medium">
                   <Pnl lot={lot} />
                 </td>
-                <td className="px-4 py-3">
-                  <Actions lot={lot} onEdit={onEdit} onDelete={onDelete} />
-                </td>
+                {canEdit && (
+                  <td className="px-4 py-3">
+                    <Actions lot={lot} onEdit={onEdit} onDelete={onDelete} />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
