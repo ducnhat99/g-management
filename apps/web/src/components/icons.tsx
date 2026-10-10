@@ -76,6 +76,17 @@ export const TrendIcon = (p: P) => (
     <path d="M3 17l6-6 4 4 8-8M15 7h6v6" />
   </Icon>
 );
+export const CloseIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </Icon>
+);
+export const CalendarIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="4" y="5" width="16" height="15" rx="2" />
+    <path d="M4 10h16M9 3v4M15 3v4" />
+  </Icon>
+);
 export const AlertIcon = (p: P) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />

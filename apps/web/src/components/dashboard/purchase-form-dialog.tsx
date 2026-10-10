@@ -2,9 +2,10 @@
 
 import { formatPercent, formatVND, MAX_NOTE_LENGTH, todayInVietnam } from '@gold/shared';
 import { useState, type FormEvent } from 'react';
+import { AlertIcon, PencilIcon, PlusIcon } from '@/components/icons';
 import { Modal } from '@/components/modal';
 import { ApiError } from '@/lib/api-client';
-import { formatSignedVND, pnlColor } from '@/lib/format';
+import { formatDateVN, formatSignedVND, pnlColor } from '@/lib/format';
 import {
   emptyPurchaseForm,
   formatPriceInput,
@@ -18,8 +19,9 @@ import {
 import { useCreatePurchase, useUpdatePurchase } from '@/lib/queries';
 import type { Lot } from './purchases-table';
 
+const labelClass = 'mb-1.5 block text-sm font-medium text-stone-700';
 const inputClass =
-  'mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none aria-invalid:border-red-500';
+  'block h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-stone-900 placeholder:text-stone-400 transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100 focus:outline-none aria-invalid:border-red-400 aria-invalid:focus:ring-red-100';
 
 /** Maps the API's `{ issues: [{ path, message }] }` 400 body onto form fields. */
 function errorsFromApi(error: unknown): PurchaseFormErrors {
@@ -34,7 +36,8 @@ function errorsFromApi(error: unknown): PurchaseFormErrors {
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? (
-    <p id={id} className="mt-1 text-xs text-red-700">
+    <p id={id} className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600">
+      <AlertIcon className="size-3.5 shrink-0" />
       {message}
     </p>
   ) : null;
@@ -90,13 +93,28 @@ export function PurchaseFormDialog({
   const describedBy = (field: PurchaseFormField) => (errors[field] ? `${field}-error` : undefined);
 
   return (
-    <Modal open title={lot ? 'Sửa giao dịch' : 'Thêm giao dịch'} onClose={onClose}>
+    <Modal
+      open
+      title={lot ? 'Sửa giao dịch' : 'Thêm giao dịch'}
+      description={
+        lot ? `Lần mua ngày ${formatDateVN(lot.purchasedAt)}` : 'Nhập một lần mua nhẫn trơn 9999'
+      }
+      icon={
+        <span
+          aria-hidden="true"
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700"
+        >
+          {lot ? <PencilIcon className="size-5" /> : <PlusIcon className="size-5" />}
+        </span>
+      }
+      onClose={onClose}
+    >
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         <div>
-          <label htmlFor="quantity" className="text-sm font-medium">
+          <label htmlFor="quantity" className={labelClass}>
             Số lượng
           </label>
-          <div className="mt-1 flex gap-2">
+          <div className="flex gap-2">
             <input
               id="quantity"
               name="quantity"
@@ -107,12 +125,12 @@ export function PurchaseFormDialog({
               onChange={(e) => set('quantity', e.target.value)}
               aria-invalid={invalid('quantity')}
               aria-describedby={describedBy('quantity')}
-              className={`${inputClass} mt-0`}
+              className={inputClass}
             />
             <div
               role="group"
               aria-label="Đơn vị"
-              className="flex shrink-0 rounded-md border border-stone-300 p-0.5"
+              className="flex h-11 shrink-0 rounded-lg bg-stone-100 p-1"
             >
               {(['chi', 'cay'] as const).map((unit) => (
                 <button
@@ -120,7 +138,7 @@ export function PurchaseFormDialog({
                   type="button"
                   aria-pressed={values.unit === unit}
                   onClick={() => set('unit', unit)}
-                  className="rounded px-3 text-sm aria-pressed:bg-amber-600 aria-pressed:text-white"
+                  className="rounded-md px-3.5 text-sm font-medium text-stone-500 transition hover:text-stone-800 aria-pressed:bg-white aria-pressed:text-amber-700 aria-pressed:shadow-sm"
                 >
                   {unit === 'chi' ? 'chỉ' : 'cây'}
                 </button>
@@ -131,26 +149,34 @@ export function PurchaseFormDialog({
         </div>
 
         <div>
-          <label htmlFor="unitPrice" className="text-sm font-medium">
+          <label htmlFor="unitPrice" className={labelClass}>
             Giá mua (VNĐ/chỉ)
           </label>
-          <input
-            id="unitPrice"
-            name="unitPrice"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="VD: 13.350.000"
-            value={values.unitPrice}
-            onChange={(e) => set('unitPrice', formatPriceInput(e.target.value))}
-            aria-invalid={invalid('unitPrice')}
-            aria-describedby={describedBy('unitPrice')}
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              id="unitPrice"
+              name="unitPrice"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="VD: 13.350.000"
+              value={values.unitPrice}
+              onChange={(e) => set('unitPrice', formatPriceInput(e.target.value))}
+              aria-invalid={invalid('unitPrice')}
+              aria-describedby={describedBy('unitPrice')}
+              className={`${inputClass} pr-16 tabular-nums`}
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-stone-400"
+            >
+              ₫/chỉ
+            </span>
+          </div>
           <FieldError id="unitPrice-error" message={errors.unitPrice} />
         </div>
 
         <div>
-          <label htmlFor="purchasedAt" className="text-sm font-medium">
+          <label htmlFor="purchasedAt" className={labelClass}>
             Ngày mua
           </label>
           <input
@@ -168,35 +194,41 @@ export function PurchaseFormDialog({
         </div>
 
         <div>
-          <label htmlFor="note" className="text-sm font-medium">
-            Ghi chú <span className="font-normal text-stone-500">(không bắt buộc)</span>
+          <label htmlFor="note" className={labelClass}>
+            Ghi chú <span className="font-normal text-stone-400">(không bắt buộc)</span>
           </label>
           <textarea
             id="note"
             name="note"
             rows={2}
             maxLength={MAX_NOTE_LENGTH}
+            placeholder="VD: Mua ở chi nhánh Hải Châu"
             value={values.note}
             onChange={(e) => set('note', e.target.value)}
             aria-invalid={invalid('note')}
             aria-describedby={describedBy('note')}
-            className={inputClass}
+            className={`${inputClass} h-auto resize-none py-2.5`}
           />
           <FieldError id="note-error" message={errors.note} />
         </div>
 
-        <div className="rounded-md bg-stone-50 p-3 text-sm" aria-live="polite">
+        <div
+          className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-4 text-sm"
+          aria-live="polite"
+        >
           {preview ? (
-            <dl className="space-y-1">
-              <div className="flex justify-between gap-2">
+            <dl className="space-y-2">
+              <div className="flex items-baseline justify-between gap-2">
                 <dt className="text-stone-600">Tổng tiền</dt>
-                <dd className="font-medium tabular-nums">{formatVND(preview.cost)}</dd>
+                <dd className="text-base font-semibold text-stone-900 tabular-nums">
+                  {formatVND(preview.cost)}
+                </dd>
               </div>
-              <div className="flex justify-between gap-2">
+              <div className="flex items-baseline justify-between gap-2 border-t border-amber-200/70 pt-2">
                 <dt className="text-stone-600">Lời/lỗ ước tính</dt>
-                <dd className="font-medium tabular-nums">
+                <dd className="font-semibold tabular-nums">
                   {preview.pnl === null ? (
-                    'Chưa có giá để ước tính'
+                    <span className="font-normal text-stone-500">Chưa có giá để ước tính</span>
                   ) : (
                     <span className={pnlColor(preview.pnl)}>
                       {formatSignedVND(preview.pnl)}
@@ -208,29 +240,39 @@ export function PurchaseFormDialog({
               </div>
             </dl>
           ) : (
-            <p className="text-stone-500">Nhập số lượng và giá để xem tổng tiền.</p>
+            <p className="text-center text-stone-500">Nhập số lượng và giá để xem tổng tiền.</p>
           )}
         </div>
 
         {errors.form && (
-          <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+          >
+            <AlertIcon className="mt-0.5 size-4 shrink-0" />
             {errors.form}
           </p>
         )}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex gap-2 pt-1 sm:justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-stone-300 px-4 py-2 text-sm hover:bg-stone-100"
+            className="h-11 flex-1 rounded-lg border border-stone-300 px-5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 sm:flex-none"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={pending}
-            className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-linear-to-r from-amber-500 to-amber-600 px-6 text-sm font-semibold text-white shadow-md shadow-amber-600/20 transition hover:from-amber-600 hover:to-amber-700 disabled:cursor-not-allowed disabled:opacity-70 sm:flex-none"
           >
+            {pending && (
+              <span
+                aria-hidden="true"
+                className="size-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent"
+              />
+            )}
             {pending ? 'Đang lưu…' : 'Lưu'}
           </button>
         </div>
