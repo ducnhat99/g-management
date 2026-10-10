@@ -23,6 +23,9 @@ COPY --from=pruner /app/out/full/apps/api/prisma ./apps/api/prisma
 COPY --from=pruner /app/out/full/apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
+# turbo prune keeps only workspace packages: add the root tsconfig every package extends. Without
+# it, settings like skipLibCheck are lost and the build type-checks dependencies' .d.ts files.
+COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 RUN pnpm turbo run build --filter=api
 
 # 3. Run as the unprivileged node user. Migrations are applied on every start (a no-op when there
