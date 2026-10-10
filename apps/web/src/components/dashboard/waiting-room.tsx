@@ -1,7 +1,7 @@
 'use client';
 
 import { lazy, Suspense } from 'react';
-import { GoldRingLogo } from '@/components/gold-ring-logo';
+import { AppLogo } from '@/components/app-logo';
 
 // Loaded only when the wait is actually slow, so fast visits never download the game.
 const CatchGoldGame = lazy(() =>
@@ -33,7 +33,7 @@ export function WaitingRoom({ ready, onContinue }: { ready: boolean; onContinue:
       ) : (
         <div className="overflow-hidden rounded-2xl border border-amber-200/70 bg-white shadow-sm">
           <div className="flex items-center gap-3 p-4">
-            <GoldRingLogo className="size-10 shrink-0 animate-pulse" />
+            <AppLogo className="size-10 shrink-0 animate-pulse" />
             <div className="min-w-0">
               <p className="font-semibold text-stone-900">Đang chuẩn bị dữ liệu…</p>
               <p role="status" className="text-sm text-stone-600">

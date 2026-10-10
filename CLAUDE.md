@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Gold tracker: records purchases of plain 9999 gold rings and shows profit/loss against Ngọc Thịnh's
+**G-management** (gold tracker): records purchases of plain 9999 gold rings and shows profit/loss against Ngọc Thịnh's
 live price. Single user, built phase by phase (see the plan doc "Kế hoạch build app quản lý vàng (v2)").
 
 ## Product decisions (do not change without asking)

@@ -3,6 +3,6 @@ import { getAppInfo } from './app-info';
 
 describe('getAppInfo', () => {
   it('returns the app name and display name', () => {
-    expect(getAppInfo()).toEqual({ name: 'gold-tracker', displayName: 'Quản lý vàng' });
+    expect(getAppInfo()).toEqual({ name: 'gold-tracker', displayName: 'G-management' });
   });
 });

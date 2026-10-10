@@ -1,4 +1,4 @@
-# Gold tracker (Quản lý vàng)
+# G-management
 
 Theo dõi lời/lỗ các lần mua nhẫn trơn 9999 theo giá mua vào của Ngọc Thịnh.
 

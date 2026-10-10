@@ -2,7 +2,7 @@
 
 import { formatChi } from '@gold/shared';
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { GoldRingLogo } from '@/components/gold-ring-logo';
+import { AppLogo } from '@/components/app-logo';
 import { PlayIcon } from '@/components/icons';
 import { readBestScore, saveBestScore } from './best-score';
 import { drawFrame } from './draw';
@@ -153,7 +153,7 @@ export function CatchGoldGame({
             <div className="w-full max-w-xs animate-modal-in rounded-2xl bg-white/95 p-5 text-center shadow-xl shadow-amber-900/10">
               {hud.status === 'ready' ? (
                 <>
-                  <GoldRingLogo className="mx-auto size-12" />
+                  <AppLogo className="mx-auto size-12" />
                   <h3 className="mt-2 text-2xl font-bold text-amber-700">Hứng vàng</h3>
                   <p className="mt-1 text-sm text-stone-600">
                     Kéo giỏ để hứng vàng thật, tránh vàng giả và bom.

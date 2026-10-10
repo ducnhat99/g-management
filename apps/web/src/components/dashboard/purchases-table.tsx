@@ -5,7 +5,7 @@ import {
   type PortfolioLot,
   type PurchaseDto,
 } from '@gold/shared';
-import { GoldRingLogo } from '@/components/gold-ring-logo';
+import { AppLogo } from '@/components/app-logo';
 import { PencilIcon, TrashIcon } from '@/components/icons';
 import { formatDateVN, formatSignedVND, pnlColor } from '@/lib/format';
 
@@ -73,7 +73,7 @@ export function PurchasesTable({
   if (lots.length === 0) {
     return (
       <div className="flex flex-col items-center rounded-2xl border border-dashed border-amber-300 bg-white/70 px-6 py-10 text-center">
-        <GoldRingLogo className="size-14 opacity-90" />
+        <AppLogo className="size-14 opacity-90" />
         <p className="mt-3 max-w-xs text-stone-600">
           Chưa có giao dịch nào. Bấm “Thêm giao dịch” để nhập lần mua đầu tiên.
         </p>

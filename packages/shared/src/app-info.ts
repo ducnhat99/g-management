@@ -7,6 +7,6 @@ export interface AppInfo {
 export function getAppInfo(): AppInfo {
   return {
     name: 'gold-tracker',
-    displayName: 'Quản lý vàng',
+    displayName: 'G-management',
   };
 }

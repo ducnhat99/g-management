@@ -3,6 +3,6 @@ import { siteTitle } from './site';
 
 describe('siteTitle', () => {
   it('comes from @gold/shared', () => {
-    expect(siteTitle).toBe('Quản lý vàng');
+    expect(siteTitle).toBe('G-management');
   });
 });

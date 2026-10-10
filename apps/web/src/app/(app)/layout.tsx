@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { GoldRingLogo } from '@/components/gold-ring-logo';
+import { AppLogo } from '@/components/app-logo';
 import { siteTitle } from '@/lib/site';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { LogoutButton } from './logout-button';
@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-stone-900">
-            <GoldRingLogo className="size-8" />
+            <AppLogo className="size-9" priority />
             {siteTitle}
           </Link>
           <div className="flex items-center gap-2">

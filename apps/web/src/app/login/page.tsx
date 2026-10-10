@@ -1,4 +1,4 @@
-import { GoldRingLogo } from '@/components/gold-ring-logo';
+import { AppLogo } from '@/components/app-logo';
 import { siteTitle } from '@/lib/site';
 import { safeNextPath } from '@/lib/safe-next-path';
 import { LoginForm } from './login-form';
@@ -29,9 +29,7 @@ export default async function LoginPage({
         />
 
         <div className="relative flex items-center gap-3">
-          <span className="rounded-2xl bg-white/90 p-1.5 shadow-sm">
-            <GoldRingLogo className="size-10" />
-          </span>
+          <AppLogo className="size-12 ring-white/40" priority />
           <span className="text-xl font-semibold">{siteTitle}</span>
         </div>
 
@@ -66,7 +64,7 @@ export default async function LoginPage({
       <section className="flex min-h-screen items-center justify-center px-4 py-12 lg:min-h-0">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
-            <GoldRingLogo className="size-16" />
+            <AppLogo className="size-20" priority />
             <p className="mt-3 text-xl font-semibold text-stone-900">{siteTitle}</p>
           </div>
 
