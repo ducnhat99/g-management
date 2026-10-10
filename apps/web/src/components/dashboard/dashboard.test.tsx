@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Dashboard } from './dashboard';
+import { Dashboard, SLOW_LOAD_MS } from './dashboard';
 
 const api = vi.hoisted(() => ({
   get: vi.fn(),
@@ -22,6 +22,19 @@ const api = vi.hoisted(() => ({
   request: vi.fn(),
 }));
 vi.mock('@/lib/api', () => ({ getApi: () => api }));
+// The real game draws on a canvas, which jsdom lacks; catch-gold-game.test.tsx covers it.
+vi.mock('@/components/catch-gold/catch-gold-game', () => ({
+  CatchGoldGame: ({ onExit }: { onExit?: () => void }) => (
+    <div>
+      Hứng vàng (mock)
+      {onExit && (
+        <button type="button" onClick={onExit}>
+          Thoát game
+        </button>
+      )}
+    </div>
+  ),
+}));
 
 /** formatVND with the non-breaking space normalized, as Testing Library compares text. */
 const vnd = (amount: number) => formatVND(amount).replace(/\s/g, ' ');
@@ -248,5 +261,67 @@ describe('Dashboard', () => {
       portfolio: calculatePortfolio([], 13_240_000, todayInVietnam()),
     });
     expect(await screen.findByText(/Chưa có giao dịch nào/)).toBeInTheDocument();
+  });
+
+  describe('waiting room (slow API)', () => {
+    /** Renders with a summary request that stays pending until `release` is called. */
+    function renderSlow() {
+      let release!: (data: PortfolioSummaryDto) => void;
+      api.get.mockReturnValue(new Promise((resolve) => (release = resolve)));
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={client}>
+          <Dashboard />
+        </QueryClientProvider>,
+      );
+      return { release: (data: PortfolioSummaryDto = summary()) => release(data) };
+    }
+
+    it('does not show the game when the data arrives quickly', async () => {
+      renderDashboard();
+      await screen.findByText('Giao dịch');
+      await new Promise((r) => setTimeout(r, SLOW_LOAD_MS + 100));
+      expect(screen.queryByText('Hứng vàng (mock)')).not.toBeInTheDocument();
+    });
+
+    it(
+      'shows the game after 1.5 s, then a "ready" bar, and continues to the dashboard on tap',
+      async () => {
+        const { release } = renderSlow();
+        expect(screen.getByText('Đang tải…')).toBeInTheDocument();
+
+        expect(
+          await screen.findByText('Hứng vàng (mock)', {}, { timeout: SLOW_LOAD_MS + 1000 }),
+        ).toBeInTheDocument();
+        expect(screen.getByText(/Chơi một ván Hứng vàng/)).toBeInTheDocument();
+        // No way out of the game before the data is there.
+        expect(screen.queryByRole('button', { name: 'Thoát game' })).not.toBeInTheDocument();
+
+        release();
+        const bar = await screen.findByText('✓ Dữ liệu đã sẵn sàng');
+        // Still playing: the data arriving does not pull the player out.
+        expect(screen.getByText('Hứng vàng (mock)')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Thoát game' })).toBeInTheDocument();
+
+        await userEvent.click(
+          within(bar.parentElement!).getByRole('button', { name: 'Xem danh mục' }),
+        );
+        expect(await screen.findByText('Giao dịch')).toBeInTheDocument();
+        expect(screen.queryByText('Hứng vàng (mock)')).not.toBeInTheDocument();
+      },
+      SLOW_LOAD_MS + 5000,
+    );
+
+    it(
+      'can also leave from the game-over screen once the data is ready',
+      async () => {
+        const { release } = renderSlow();
+        await screen.findByText('Hứng vàng (mock)', {}, { timeout: SLOW_LOAD_MS + 1000 });
+        release();
+        await userEvent.click(await screen.findByRole('button', { name: 'Thoát game' }));
+        expect(await screen.findByText('Giao dịch')).toBeInTheDocument();
+      },
+      SLOW_LOAD_MS + 5000,
+    );
   });
 });

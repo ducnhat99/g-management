@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { siteTitle } from '@/lib/site';
 import { Providers } from './providers';
+import { WarmUpApi } from './warm-up-api';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
       <body className="min-h-screen bg-stone-50 text-stone-900 antialiased">
+        <WarmUpApi />
         <Providers>{children}</Providers>
       </body>
     </html>

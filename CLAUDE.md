@@ -96,6 +96,10 @@ pnpm db:studio
   (every mutation invalidates the summary). Component tests use `// @vitest-environment jsdom`,
   Testing Library, `vi.mock('@/lib/api')`, and data built with the real `calculatePortfolio`;
   compare VND text after replacing the non-breaking space (`formatVND(n).replace(/\s/g, ' ')`).
+- Render's free plan sleeps the API. The web pings `/health` on every page load (`WarmUpApi` in the
+  root layout), and if `/portfolio/summary` takes over 1.5 s the dashboard shows the "Hứng vàng"
+  mini-game (`src/components/catch-gold/`: pure `engine.ts` + canvas `draw.ts`). The game makes no
+  API calls; the player leaves via the "Dữ liệu đã sẵn sàng" bar, never automatically.
 - E2E tests use `test/support/test-app.ts`: the real `AppModule` with a locally generated ES256 key
   (`tokenFor(userId)`) and an in-memory `PurchaseStore`.
 

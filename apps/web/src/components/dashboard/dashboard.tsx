@@ -2,13 +2,18 @@
 
 import { useState } from 'react';
 import { useSummary } from '@/lib/queries';
+import { useDelayedFlag } from '@/lib/use-delayed-flag';
 import { DeletePurchaseDialog } from './delete-purchase-dialog';
 import { PriceCard } from './price-card';
 import { PurchaseFormDialog } from './purchase-form-dialog';
 import { PurchasesTable, type Lot } from './purchases-table';
 import { SummaryCards } from './summary-cards';
+import { WaitingRoom } from './waiting-room';
 
 type Dialog = { kind: 'form'; lot: Lot | null; key: number } | { kind: 'delete'; lot: Lot } | null;
+
+/** Loading longer than this (a sleeping API) opens the waiting-room game. */
+export const SLOW_LOAD_MS = 1500;
 
 export function Dashboard() {
   const summary = useSummary();
@@ -16,7 +21,12 @@ export function Dashboard() {
   const close = () => setDialog(null);
   // A new key per opening remounts the form, so it never shows the previous draft.
   const openForm = (lot: Lot | null) => setDialog({ kind: 'form', lot, key: Date.now() });
+  const slow = useDelayedFlag(summary.isPending, SLOW_LOAD_MS);
+  const [leftWaitingRoom, setLeftWaitingRoom] = useState(false);
 
+  if (slow && !leftWaitingRoom) {
+    return <WaitingRoom ready={!summary.isPending} onContinue={() => setLeftWaitingRoom(true)} />;
+  }
   if (summary.isPending) {
     return <p className="text-stone-600">Đang tải…</p>;
   }
