@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PlusIcon } from '@/components/icons';
 import { useSummary } from '@/lib/queries';
 import { useDelayedFlag } from '@/lib/use-delayed-flag';
 import { DeletePurchaseDialog } from './delete-purchase-dialog';
@@ -52,13 +53,21 @@ export function Dashboard() {
       <SummaryCards totals={portfolio.totals} />
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Giao dịch</h2>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-stone-900">Giao dịch</h2>
+            <p className="text-sm text-stone-500">
+              {portfolio.lots.length > 0
+                ? `${portfolio.lots.length} lần mua, mới nhất trước`
+                : 'Các lần mua vàng của bạn'}
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => openForm(null)}
-            className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-linear-to-r from-amber-500 to-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-amber-600/20 transition hover:from-amber-600 hover:to-amber-700"
           >
+            <PlusIcon className="size-4" />
             Thêm giao dịch
           </button>
         </div>

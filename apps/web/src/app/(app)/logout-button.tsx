@@ -3,6 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { LogoutIcon } from '@/components/icons';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export function LogoutButton() {
@@ -24,8 +25,9 @@ export function LogoutButton() {
       type="button"
       onClick={logout}
       disabled={pending}
-      className="rounded-md border border-stone-300 px-3 py-1.5 hover:bg-stone-100 disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 disabled:opacity-60"
     >
+      <LogoutIcon className="size-4" />
       {pending ? 'Đang đăng xuất…' : 'Đăng xuất'}
     </button>
   );
