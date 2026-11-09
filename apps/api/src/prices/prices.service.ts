@@ -1,4 +1,10 @@
-import type { PriceDto, PriceHistoryItemDto, RefreshTooSoonDto } from '@gold/shared';
+import {
+  calculatePriceStats,
+  type PriceDto,
+  type PriceHistoryItemDto,
+  type PriceStatsDto,
+  type RefreshTooSoonDto,
+} from '@gold/shared';
 import {
   HttpException,
   HttpStatus,
@@ -73,6 +79,22 @@ export class PricesService {
       sourceUpdatedAt: s.sourceUpdatedAt.toISOString(),
       checkedAt: s.checkedAt.toISOString(),
     }));
+  }
+
+  /**
+   * Closing prices and changes per day, month and year, from stored snapshots only (never
+   * crawls). Loads every snapshot: at most one per crawl, so a few thousand a year.
+   */
+  async getStats(): Promise<PriceStatsDto> {
+    const snapshots = await this.store.findSince(await this.getGoldTypeId(), new Date(0));
+    return calculatePriceStats(
+      snapshots.map((s) => ({
+        buyPrice: bigintToNumber(s.buyPrice),
+        sellPrice: bigintToNumber(s.sellPrice),
+        sourceUpdatedAt: s.sourceUpdatedAt.toISOString(),
+      })),
+      this.clock.now(),
+    );
   }
 
   private async resolveLatest(): Promise<PriceDto> {

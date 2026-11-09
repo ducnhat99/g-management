@@ -1,4 +1,4 @@
-import type { PriceDto, PriceHistoryItemDto } from '@gold/shared';
+import type { PriceDto, PriceHistoryItemDto, PriceStatsDto } from '@gold/shared';
 import {
   BadRequestException,
   Controller,
@@ -36,5 +36,11 @@ export class PricesController {
       throw new BadRequestException(`days must be between 1 and ${MAX_HISTORY_DAYS}`);
     }
     return this.prices.getHistory(days);
+  }
+
+  /** Statistics page: day, month and year series in one response. */
+  @Get('stats')
+  stats(): Promise<PriceStatsDto> {
+    return this.prices.getStats();
   }
 }

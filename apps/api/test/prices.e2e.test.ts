@@ -19,7 +19,7 @@ const PRICE: PriceDto = {
 
 describe('PricesController (HTTP)', () => {
   let app: INestApplication;
-  const prices = { getLatest: vi.fn(), refresh: vi.fn(), getHistory: vi.fn() };
+  const prices = { getLatest: vi.fn(), refresh: vi.fn(), getHistory: vi.fn(), getStats: vi.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -69,5 +69,11 @@ describe('PricesController (HTTP)', () => {
   it.each(['0', '366', 'abc', '-5'])('GET /prices/history?days=%s is a 400', async (days) => {
     await request(app.getHttpServer()).get(`/prices/history?days=${days}`).expect(400);
     expect(prices.getHistory).not.toHaveBeenCalled();
+  });
+
+  it('GET /prices/stats returns the stats', async () => {
+    const stats = { snapshotCount: 0, lastUpdatedAt: null, day: [], month: [], year: [] };
+    prices.getStats.mockResolvedValue(stats);
+    await request(app.getHttpServer()).get('/prices/stats').expect(200).expect(stats);
   });
 });

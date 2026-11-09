@@ -278,4 +278,27 @@ describe('PricesService', () => {
       ]);
     });
   });
+
+  describe('getStats', () => {
+    it('builds the series from every stored snapshot without crawling', async () => {
+      fetchQuote.mockResolvedValue(quote(13_000_000, 13_100_000, '2025-06-01T02:00:00Z'));
+      await service.getLatest();
+      clock.advance(HOUR);
+      fetchQuote.mockResolvedValue(MORNING);
+      await service.getLatest();
+      fetchQuote.mockClear();
+
+      const stats = await service.getStats();
+      expect(fetchQuote).not.toHaveBeenCalled();
+      expect(stats.snapshotCount).toBe(2);
+      expect(stats.lastUpdatedAt).toBe('2026-10-09T02:15:00.000Z');
+      expect(stats.year.map((p) => p.period)).toEqual(['2025', '2026']);
+      expect(stats.year[1]).toMatchObject({
+        closeBuy: 13_240_000,
+        changeBuy: 240_000,
+        changeBuyPct: 1.85,
+      });
+      expect(stats.day.at(-1)).toMatchObject({ period: '2026-10-09', hasData: true });
+    });
+  });
 });

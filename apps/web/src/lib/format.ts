@@ -45,3 +45,26 @@ export function pnlColor(amount: number | null): string {
   if (amount === null || amount === 0) return 'text-stone-700';
   return amount > 0 ? 'text-emerald-700' : 'text-red-700';
 }
+
+const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+/**
+ * Labels for a stats period: "2026-11-09" -> 09/11 and "T2, 09/11/2026"; "2026-11" -> 11/26 and
+ * "Tháng 11/2026"; "2026" -> 2026 and "Năm 2026".
+ */
+export function formatPeriod(period: string): { short: string; full: string } {
+  const [year = '', month, day] = period.split('-');
+  if (day) {
+    const weekday = WEEKDAYS[new Date(`${period}T00:00:00Z`).getUTCDay()];
+    return { short: `${day}/${month}`, full: `${weekday}, ${day}/${month}/${year}` };
+  }
+  if (month) {
+    return { short: `${month}/${year.slice(2)}`, full: `Tháng ${Number(month)}/${year}` };
+  }
+  return { short: year, full: `Năm ${year}` };
+}
+
+/** Axis label in millions of đồng: 13240000 -> "13,24 tr". Display only. */
+export function formatMillions(amount: number): string {
+  return `${new Intl.NumberFormat('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount / 1_000_000)} tr`;
+}
