@@ -62,7 +62,7 @@ export interface PortfolioSummaryDto {
 }
 
 /** a / b rounded half away from zero (so -0.825 -> -0.83, like +0.825 -> +0.83). */
-function divideRounded(a: bigint, b: bigint): bigint {
+export function divideRounded(a: bigint, b: bigint): bigint {
   const negative = a < 0n !== b < 0n;
   const absA = a < 0n ? -a : a;
   const absB = b < 0n ? -b : b;

@@ -3,6 +3,8 @@ import {
   formatCountdown,
   formatDateTimeVN,
   formatDateVN,
+  formatMillions,
+  formatPeriod,
   formatSignedVND,
   pnlColor,
 } from './format';
@@ -49,5 +51,22 @@ describe('formatSignedVND / pnlColor', () => {
     expect(pnlColor(1)).toContain('emerald');
     expect(pnlColor(-1)).toContain('red');
     expect(pnlColor(null)).toContain('stone');
+  });
+});
+
+describe('formatPeriod', () => {
+  it.each([
+    ['2026-11-09', '09/11', 'T2, 09/11/2026'],
+    ['2026-11-08', '08/11', 'CN, 08/11/2026'],
+    ['2026-01', '01/26', 'Tháng 1/2026'],
+    ['2026', '2026', 'Năm 2026'],
+  ])('%s -> %s / %s', (period, short, full) => {
+    expect(formatPeriod(period)).toEqual({ short, full });
+  });
+});
+
+describe('formatMillions', () => {
+  it('shows millions with two decimals', () => {
+    expect(formatMillions(13_240_000)).toBe('13,24 tr');
   });
 });

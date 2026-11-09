@@ -7,6 +7,7 @@ import type {
   InviteMemberInput,
   PortfolioSummaryDto,
   PriceDto,
+  PriceStatsDto,
   PurchaseDto,
   UpdatePurchaseInput,
 } from '@gold/shared';
@@ -20,6 +21,16 @@ export function useSummary() {
   return useQuery({
     queryKey: summaryKey,
     queryFn: () => getApi().get<PortfolioSummaryDto>('/portfolio/summary'),
+  });
+}
+
+export const priceStatsKey = ['prices', 'stats'] as const;
+
+/** Statistics page: day, month and year series from stored prices (never crawls). */
+export function usePriceStats() {
+  return useQuery({
+    queryKey: priceStatsKey,
+    queryFn: () => getApi().get<PriceStatsDto>('/prices/stats'),
   });
 }
 
