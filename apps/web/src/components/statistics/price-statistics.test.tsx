@@ -95,6 +95,18 @@ describe('PriceStatistics', () => {
     expect(body()).toHaveLength(30);
   });
 
+  it('also lists the periods as a phone-friendly list, newest first', async () => {
+    renderPage();
+    await screen.findByRole('heading', { name: 'Thống kê giá' });
+    const items = within(screen.getByRole('list', { name: 'Chi tiết theo ngày' })).getAllByRole(
+      'listitem',
+    );
+    expect(items).toHaveLength(10);
+    expect(items[0]).toHaveTextContent(
+      `T2, 09/11/2026▲ +1,00%Mua ${vnd(13_130_000)} · Bán ${vnd(13_400_000)}+${vnd(130_000)}`,
+    );
+  });
+
   it('switches to months and years', async () => {
     renderPage();
     await screen.findByRole('heading', { name: 'Thống kê giá' });

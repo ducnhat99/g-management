@@ -27,35 +27,41 @@ function Pnl({ lot }: { lot: Lot }) {
   );
 }
 
+/** Sửa/Xóa. `iconOnly` in the table keeps the row narrow; the name stays in aria-label + title. */
 function Actions({
   lot,
   onEdit,
   onDelete,
+  iconOnly = false,
 }: {
   lot: Lot;
   onEdit: (lot: Lot) => void;
   onDelete: (lot: Lot) => void;
+  iconOnly?: boolean;
 }) {
   const label = `giao dịch ngày ${formatDateVN(lot.purchasedAt)}`;
+  const size = iconOnly ? 'size-9 justify-center' : 'gap-1 px-2 py-1.5';
   return (
     <div className="flex justify-end gap-1">
       <button
         type="button"
         onClick={() => onEdit(lot)}
         aria-label={`Sửa ${label}`}
-        className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+        title={iconOnly ? 'Sửa' : undefined}
+        className={`inline-flex items-center rounded-lg text-sm text-stone-600 transition hover:bg-stone-100 hover:text-stone-900 ${size}`}
       >
         <PencilIcon className="size-4" />
-        Sửa
+        {!iconOnly && 'Sửa'}
       </button>
       <button
         type="button"
         onClick={() => onDelete(lot)}
         aria-label={`Xóa ${label}`}
-        className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-red-600 transition hover:bg-red-50 hover:text-red-700"
+        title={iconOnly ? 'Xóa' : undefined}
+        className={`inline-flex items-center rounded-lg text-sm text-red-600 transition hover:bg-red-50 hover:text-red-700 ${size}`}
       >
         <TrashIcon className="size-4" />
-        Xóa
+        {!iconOnly && 'Xóa'}
       </button>
     </div>
   );
@@ -102,8 +108,8 @@ export function PurchasesTable({
 
   return (
     <>
-      {/* Phones: one card per purchase. */}
-      <ul className="space-y-3 sm:hidden" aria-label="Giao dịch">
+      {/* Phones and tablets: one card per purchase (two columns from sm), so nothing scrolls sideways. */}
+      <ul className="grid gap-3 sm:grid-cols-2 lg:hidden" aria-label="Giao dịch">
         {lots.map((lot) => (
           <li key={lot.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-2">
@@ -146,19 +152,19 @@ export function PurchasesTable({
         ))}
       </ul>
 
-      {/* Tablets and up: a table. */}
-      <div className="hidden overflow-x-auto rounded-2xl border border-stone-200 bg-white shadow-sm sm:block">
+      {/* Laptops and up: a table that fits the page width. */}
+      <div className="hidden overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm lg:block">
         <table className="w-full text-sm">
           <thead className="border-b border-stone-200 bg-stone-50/80 text-left text-xs font-semibold tracking-wide text-stone-500 uppercase">
             <tr>
-              <th className="px-4 py-3">Ngày mua</th>
-              <th className="px-4 py-3">Số lượng</th>
-              <th className="px-4 py-3 text-right">Giá mua/chỉ</th>
-              <th className="px-4 py-3 text-right">Vốn</th>
-              <th className="px-4 py-3 text-right">Giá trị</th>
-              <th className="px-4 py-3 text-right">Lời/lỗ</th>
+              <th className="px-3 py-3">Ngày mua</th>
+              <th className="px-3 py-3">Số lượng</th>
+              <th className="px-3 py-3 text-right">Giá mua/chỉ</th>
+              <th className="px-3 py-3 text-right">Vốn</th>
+              <th className="px-3 py-3 text-right">Giá trị</th>
+              <th className="px-3 py-3 text-right">Lời/lỗ</th>
               {canEdit && (
-                <th className="px-4 py-3">
+                <th className="px-3 py-3">
                   <span className="sr-only">Thao tác</span>
                 </th>
               )}
@@ -167,11 +173,11 @@ export function PurchasesTable({
           <tbody className="divide-y divide-stone-100 text-stone-700 tabular-nums">
             {lots.map((lot) => (
               <tr key={lot.id} className="transition-colors hover:bg-amber-50/40">
-                <td className="px-4 py-3 font-medium whitespace-nowrap text-stone-900">
+                <td className="px-3 py-3 font-medium whitespace-nowrap text-stone-900">
                   {formatDateVN(lot.purchasedAt)}
                   <span className="block text-xs text-stone-500">{lot.holdingDays} ngày</span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3">
                   {formatChi(lot.quantityChi)}
                   {lot.note && (
                     <span
@@ -183,17 +189,19 @@ export function PurchasesTable({
                   )}
                   {showCreatedBy && <CreatedBy lot={lot} />}
                 </td>
-                <td className="px-4 py-3 text-right">{formatVND(lot.unitPrice)}</td>
-                <td className="px-4 py-3 text-right">{formatVND(lot.cost)}</td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-3 py-3 text-right whitespace-nowrap">
+                  {formatVND(lot.unitPrice)}
+                </td>
+                <td className="px-3 py-3 text-right whitespace-nowrap">{formatVND(lot.cost)}</td>
+                <td className="px-3 py-3 text-right whitespace-nowrap">
                   {lot.value === null ? '—' : formatVND(lot.value)}
                 </td>
-                <td className="px-4 py-3 text-right font-medium">
+                <td className="px-3 py-3 text-right font-medium whitespace-nowrap">
                   <Pnl lot={lot} />
                 </td>
                 {canEdit && (
-                  <td className="px-4 py-3">
-                    <Actions lot={lot} onEdit={onEdit} onDelete={onDelete} />
+                  <td className="py-3 pr-3 pl-1">
+                    <Actions lot={lot} onEdit={onEdit} onDelete={onDelete} iconOnly />
                   </td>
                 )}
               </tr>

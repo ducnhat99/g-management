@@ -29,8 +29,46 @@ export function StatsTable({
           Thay đổi tính theo {kind === 'buy' ? 'giá mua vào' : 'giá bán ra'}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-140 text-sm tabular-nums">
+      {/* Phones: two short lines per period, so nothing scrolls sideways. */}
+      <ul
+        aria-label={`Chi tiết theo ${UNIT[granularity]}`}
+        className="divide-y divide-stone-200 md:hidden"
+      >
+        {visible.map((point) => {
+          const change = changeOf(point, kind);
+          const pct = changePctOf(point, kind);
+          const color = changeTextColor(change);
+          return (
+            <li key={point.period} className="px-4 py-3 text-sm tabular-nums">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-medium text-stone-900">
+                  {formatPeriod(point.period).full}
+                </span>
+                <span className={`font-semibold whitespace-nowrap ${color}`}>
+                  {pct === null ? '—' : `${arrow(change)}${formatPercent(pct, { sign: true })}`}
+                </span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs text-stone-600">
+                <span>
+                  Mua {formatVND(point.closeBuy ?? 0)} · Bán {formatVND(point.closeSell ?? 0)}
+                </span>
+                <span className={`whitespace-nowrap ${color}`}>
+                  {change === null ? '—' : formatSignedVND(change)}
+                </span>
+              </div>
+              {!point.hasData && (
+                <span className="mt-1.5 inline-block rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
+                  Không có cập nhật
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Tablets and up: a table that fits the card width. */}
+      <div className="hidden md:block">
+        <table className="w-full text-sm tabular-nums">
           <thead>
             <tr className="text-left text-xs text-stone-500">
               <th scope="col" className="px-4 py-2.5 font-medium sm:px-5">
@@ -57,13 +95,10 @@ export function StatsTable({
               const color = changeTextColor(change);
               return (
                 <tr key={point.period} className="border-t border-stone-200 text-stone-800">
-                  <th
-                    scope="row"
-                    className="px-4 py-2.5 text-left font-normal whitespace-nowrap sm:px-5"
-                  >
-                    {formatPeriod(point.period).full}
+                  <th scope="row" className="px-4 py-2.5 text-left font-normal sm:px-5">
+                    <span className="whitespace-nowrap">{formatPeriod(point.period).full}</span>
                     {!point.hasData && (
-                      <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600">
+                      <span className="ml-2 inline-block rounded-full bg-stone-100 px-2 py-0.5 text-[11px] whitespace-nowrap text-stone-600">
                         Không có cập nhật
                       </span>
                     )}
